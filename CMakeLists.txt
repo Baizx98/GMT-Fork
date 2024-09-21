@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 set (THREADS_PREFER_PTHREAD_FLAG ON)
 find_package (Threads REQUIRED)
-find_package (CUDA 8.0)
+find_package (CUDA REQUIRED)
 
 
 
@@ -363,9 +363,9 @@ endif ()
 
 # Add individual benchmarks
 if (CUDA_FOUND AND NOT no_cuda)
-  add_subdirectory ("${benchmarks_root}/multivectoradd")
+  #add_subdirectory ("${benchmarks_root}/multivectoradd")
   #add_subdirectory ("${benchmarks_root}/pathfinder")
-  #add_subdirectory ("${benchmarks_root}/backprop")
+  add_subdirectory ("${benchmarks_root}/backprop")
   #add_subdirectory ("${benchmarks_root}/hotspot")
   #add_subdirectory ("${benchmarks_root}/srad_v2")
   #add_subdirectory ("${benchmarks_root}/sssp")
