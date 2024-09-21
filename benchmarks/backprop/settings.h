@@ -20,35 +20,34 @@
 #include <getopt.h>
 #include <limits>
 
-
 struct Settings
 {
-    uint32_t        cudaDevice;
-    uint64_t        cudaDeviceId;
-    const char*     blockDevicePath;
-    const char*     controllerPath;
-    uint64_t        controllerId;
-    uint32_t        adapter;
-    uint32_t        segmentId;
-    uint32_t        nvmNamespace;
-    bool            doubleBuffered;
-    size_t          numReqs;
-    size_t          numPages;
-    size_t          startBlock;
-    bool            stats;
-    const char*     input;
-    const char*     output;
-    size_t          ofileoffset; 
-    size_t          type; 
-    size_t          memalloc; 
-    size_t          numThreads;
-    size_t          cols;
-    size_t          rows;
-    size_t          pyramid_height;
-    size_t          iter;
-    uint32_t        domain;
-    uint32_t        bus;
-    uint32_t        devfn;
+    uint32_t cudaDevice;
+    uint64_t cudaDeviceId;
+    const char *blockDevicePath;
+    const char *controllerPath;
+    uint64_t controllerId;
+    uint32_t adapter;
+    uint32_t segmentId;
+    uint32_t nvmNamespace;
+    bool doubleBuffered;
+    size_t numReqs;
+    size_t numPages;
+    size_t startBlock;
+    bool stats;
+    const char *input;
+    const char *output;
+    size_t ofileoffset;
+    size_t type;
+    size_t memalloc;
+    size_t numThreads;
+    size_t cols;
+    size_t rows;
+    size_t pyramid_height;
+    size_t iter;
+    uint32_t domain;
+    uint32_t bus;
+    uint32_t devfn;
     uint64_t tsize;
     uint32_t n_ctrls;
     size_t blkSize;
@@ -60,78 +59,72 @@ struct Settings
     uint64_t ssdtype;
     uint64_t layer_size;
     Settings();
-    void parseArguments(int argc, char** argv);
+    void parseArguments(int argc, char **argv);
 
-    static std::string usageString(const std::string& name);
+    static std::string usageString(const std::string &name);
 
     std::string getDeviceBDF() const;
 };
 
-
 struct OptionIface;
+using std::make_shared;
 using std::string;
 using std::vector;
-using std::make_shared;
-typedef std::shared_ptr<OptionIface>  OptionPtr;
+typedef std::shared_ptr<OptionIface> OptionPtr;
 typedef std::map<int, OptionPtr> OptionMap;
-
 
 struct OptionIface
 {
-    const char*     type;
-    const char*     name;
-    const char*     description;
-    const char*     defaultValue;
-    int             hasArgument;
+    const char *type;
+    const char *name;
+    const char *description;
+    const char *defaultValue;
+    int hasArgument;
 
     virtual ~OptionIface() = default;
 
-    OptionIface(const char* type, const char* name, const char* description)
-        : type(type), name(name), description(description), hasArgument(no_argument) { }
+    OptionIface(const char *type, const char *name, const char *description)
+        : type(type), name(name), description(description), hasArgument(no_argument) {}
 
-    OptionIface(const char* type, const char* name, const char* description, const char* dvalue)
-        : type(type), name(name), description(description), defaultValue(dvalue), hasArgument(no_argument) { }
+    OptionIface(const char *type, const char *name, const char *description, const char *dvalue)
+        : type(type), name(name), description(description), defaultValue(dvalue), hasArgument(no_argument) {}
 
-    virtual void parseArgument(const char* optstr, const char* optarg) = 0;
+    virtual void parseArgument(const char *optstr, const char *optarg) = 0;
 
-    virtual void throwError(const char*, const char* optarg) const
+    virtual void throwError(const char *, const char *optarg) const
     {
         throw string("Option ") + name + string(" expects a ") + type + string(", but got `") + optarg + string("'");
     }
 };
 
-
 template <typename T>
-struct Option: public OptionIface
+struct Option : public OptionIface
 {
-    T&              value;
+    T &value;
 
     Option() = delete;
-    Option(Option&& rhs) = delete;
-    Option(const Option& rhs) = delete;
+    Option(Option &&rhs) = delete;
+    Option(const Option &rhs) = delete;
 
-    Option(T& value, const char* type, const char* name, const char* description)
-        : OptionIface(type, name, description)
-        , value(value)
+    Option(T &value, const char *type, const char *name, const char *description)
+        : OptionIface(type, name, description), value(value)
     {
         hasArgument = required_argument;
     }
 
-    Option(T& value, const char* type, const char* name, const char* description, const char* dvalue)
-        : OptionIface(type, name, description, dvalue)
-        , value(value)
+    Option(T &value, const char *type, const char *name, const char *description, const char *dvalue)
+        : OptionIface(type, name, description, dvalue), value(value)
     {
         hasArgument = required_argument;
     }
 
-    void parseArgument(const char* optstr, const char* optarg) override;
+    void parseArgument(const char *optstr, const char *optarg) override;
 };
 
-
 template <>
-void Option<uint32_t>::parseArgument(const char* optstr, const char* optarg)
+void Option<uint32_t>::parseArgument(const char *optstr, const char *optarg)
 {
-    char* endptr = nullptr;
+    char *endptr = nullptr;
 
     value = std::strtoul(optarg, &endptr, 0);
 
@@ -141,11 +134,10 @@ void Option<uint32_t>::parseArgument(const char* optstr, const char* optarg)
     }
 }
 
-
 template <>
-void Option<uint64_t>::parseArgument(const char* optstr, const char* optarg)
+void Option<uint64_t>::parseArgument(const char *optstr, const char *optarg)
 {
-    char* endptr = nullptr;
+    char *endptr = nullptr;
 
     value = std::strtoul(optarg, &endptr, 0);
 
@@ -155,9 +147,8 @@ void Option<uint64_t>::parseArgument(const char* optstr, const char* optarg)
     }
 }
 
-
 template <>
-void Option<bool>::parseArgument(const char* optstr, const char* optarg)
+void Option<bool>::parseArgument(const char *optstr, const char *optarg)
 {
     string str(optarg);
     std::transform(str.begin(), str.end(), str.begin(), std::ptr_fun<int, int>(std::tolower));
@@ -176,29 +167,27 @@ void Option<bool>::parseArgument(const char* optstr, const char* optarg)
     }
 }
 
-
 template <>
-void Option<const char*>::parseArgument(const char* optstr, const char* optarg)
+void Option<const char *>::parseArgument(const char *optstr, const char *optarg)
 {
-    if(optarg == nullptr){
-            throwError(optstr, optarg); 
+    if (optarg == nullptr)
+    {
+        throwError(optstr, optarg);
     }
     value = optarg;
 }
 
-
-struct Range: public Option<uint64_t>
+struct Range : public Option<uint64_t>
 {
-    uint64_t      lower;
-    uint64_t      upper;
+    uint64_t lower;
+    uint64_t upper;
 
-    Range(uint64_t& value, uint64_t lo, uint64_t hi, const char* name, const char* description, const char* dv)
-        : Option<uint64_t>(value, "count", name, description, dv)
-        , lower(lo)
-        , upper(hi)
-    { }
+    Range(uint64_t &value, uint64_t lo, uint64_t hi, const char *name, const char *description, const char *dv)
+        : Option<uint64_t>(value, "count", name, description, dv), lower(lo), upper(hi)
+    {
+    }
 
-    void throwError(const char*, const char*) const override
+    void throwError(const char *, const char *) const override
     {
         if (upper != 0 && lower != 0)
         {
@@ -211,7 +200,7 @@ struct Range: public Option<uint64_t>
         throw string("Option ") + name + string(" must lower than ") + std::to_string(upper);
     }
 
-    void parseArgument(const char* optstr, const char* optarg) override
+    void parseArgument(const char *optstr, const char *optarg) override
     {
         Option<uint64_t>::parseArgument(optstr, optarg);
 
@@ -227,9 +216,7 @@ struct Range: public Option<uint64_t>
     }
 };
 
-
-
-static void setBDF(Settings& settings)
+static void setBDF(Settings &settings)
 {
     cudaDeviceProp props;
 
@@ -244,68 +231,62 @@ static void setBDF(Settings& settings)
     settings.devfn = props.pciDeviceID;
 }
 
-
 string Settings::getDeviceBDF() const
 {
     using namespace std;
     ostringstream s;
 
     s << setfill('0') << setw(4) << hex << domain
-        << ":" << setfill('0') << setw(2) << hex << bus
-        << ":" << setfill('0') << setw(2) << hex << devfn
-        << ".0";
+      << ":" << setfill('0') << setw(2) << hex << bus
+      << ":" << setfill('0') << setw(2) << hex << devfn
+      << ".0";
 
     return s.str();
 }
 
-
-
-string Settings::usageString(const string& name)
+string Settings::usageString(const string &name)
 {
-    //return "Usage: " + name + " --ctrl=identifier [options]\n"
-        //+  "   or: " + name + " --block-device=path [options]";
+    // return "Usage: " + name + " --ctrl=identifier [options]\n"
+    //+  "   or: " + name + " --block-device=path [options]";
     return "\n";
 }
 
-
-
-static string helpString(const string& /*name*/, OptionMap& options)
+static string helpString(const string & /*name*/, OptionMap &options)
 {
     using namespace std;
     ostringstream s;
 
     s << "" << left
-        << setw(16) << "OPTION"
-        << setw(2) << " "
-        << setw(16) << "TYPE"
-        << setw(10) << "DEFAULT"
-        << setw(36) << "DESCRIPTION"
-        << endl;
+      << setw(16) << "OPTION"
+      << setw(2) << " "
+      << setw(16) << "TYPE"
+      << setw(10) << "DEFAULT"
+      << setw(36) << "DESCRIPTION"
+      << endl;
 
-    for (const auto& optPair: options)
+    for (const auto &optPair : options)
     {
-        const auto& opt = optPair.second;
+        const auto &opt = optPair.second;
         s << "  " << left
-            << setw(16) << opt->name
-            << setw(16) << opt->type
-            << setw(10) << (opt->defaultValue != nullptr ? opt->defaultValue : "")
-            << setw(36) << opt->description
-            << endl;
+          << setw(16) << opt->name
+          << setw(16) << opt->type
+          << setw(10) << (opt->defaultValue != nullptr ? opt->defaultValue : "")
+          << setw(36) << opt->description
+          << endl;
     }
 
     return s.str();
 }
 
-
-static void createLongOptions(vector<option>& options, string& optionString, const OptionMap& parsers)
+static void createLongOptions(vector<option> &options, string &optionString, const OptionMap &parsers)
 {
-    options.push_back(option{ .name = "help", .has_arg = no_argument, .flag = nullptr, .val = 'h' });
+    options.push_back(option{.name = "help", .has_arg = no_argument, .flag = nullptr, .val = 'h'});
     optionString = ":h";
 
-    for (const auto& parserPair: parsers)
+    for (const auto &parserPair : parsers)
     {
         int shortOpt = parserPair.first;
-        const OptionPtr& parser = parserPair.second;
+        const OptionPtr &parser = parserPair.second;
 
         option opt;
         opt.name = parser->name;
@@ -317,7 +298,7 @@ static void createLongOptions(vector<option>& options, string& optionString, con
 
         if ('0' <= shortOpt && shortOpt <= 'z')
         {
-            optionString += (char) shortOpt;
+            optionString += (char)shortOpt;
             if (parser->hasArgument == required_argument)
             {
                 optionString += ":";
@@ -325,9 +306,8 @@ static void createLongOptions(vector<option>& options, string& optionString, con
         }
     }
 
-    options.push_back(option{ .name = nullptr, .has_arg = 0, .flag = nullptr, .val = 0 });
+    options.push_back(option{.name = nullptr, .has_arg = 0, .flag = nullptr, .val = 0});
 }
-
 
 static void verifyCudaDevice(int device)
 {
@@ -344,7 +324,6 @@ static void verifyCudaDevice(int device)
         throw string("Invalid CUDA device: ") + std::to_string(device);
     }
 }
-
 
 static void verifyNumberOfThreads(size_t numThreads)
 {
@@ -363,12 +342,10 @@ static void verifyNumberOfThreads(size_t numThreads)
     throw string("Invalid number of threads, must be a power of 2");
 }
 
-
-
-void Settings::parseArguments(int argc, char** argv)
+void Settings::parseArguments(int argc, char **argv)
 {
     OptionMap parsers = {
-        {'f', OptionPtr(new Option<const char*>(input, "path", "input", "File path where the vertex file is. Provide .bel path."))},
+        {'f', OptionPtr(new Option<const char *>(input, "path", "input", "File path where the vertex file is. Provide .bel path."))},
         {'l', OptionPtr(new Range(ofileoffset, 0, (uint64_t)std::numeric_limits<uint64_t>::max, "loffset", "Offset where the input file contents need to be stored in NVMe SSD", "0"))},
         {'v', OptionPtr(new Range(type, 0, 30, "impl_type", "COALESCE = 1, COALESCE_CHUNK = 2, COALESCE_PC = 4, COALESCE_CHUNK_PC = 5", "1"))},
         {'m', OptionPtr(new Range(memalloc, 0, 6, "memalloc", "GPUMEM = 0, UVM_READONLY = 1, UVM_DIRECT = 2, BAFS_DIRECT = 6", "2"))},
@@ -402,57 +379,56 @@ void Settings::parseArguments(int argc, char** argv)
     {
         switch (option)
         {
-            case '?':
+        case '?':
+            throw string("Unknown option: `") + argv[optind - 1] + string("'");
+
+        case ':':
+            throw string("Missing argument for option `") + argv[optind - 1] + string("'");
+
+        case 'h':
+            throw helpString(argv[0], parsers);
+
+        default:
+            parser = parsers.find(option);
+            if (parser == parsers.end())
+            {
                 throw string("Unknown option: `") + argv[optind - 1] + string("'");
-
-            case ':':
-                throw string("Missing argument for option `") + argv[optind - 1] + string("'");
-
-            case 'h':
-                throw helpString(argv[0], parsers);
-
-            default:
-                parser = parsers.find(option);
-                if (parser == parsers.end())
-                {
-                    throw string("Unknown option: `") + argv[optind - 1] + string("'");
-                }
-                parser->second->parseArgument(argv[optind - 1], optarg);
-                break;
+            }
+            parser->second->parseArgument(argv[optind - 1], optarg);
+            break;
         }
     }
-/*
-#ifdef __DIS_CLUSTER__
-    if (blockDevicePath == nullptr && controllerId == 0)
-    {
-        throw string("No block device or NVM controller specified");
-    }
-    else if (blockDevicePath != nullptr && controllerId != 0)
-    {
-        throw string("Either block device or NVM controller must be specified, not both!");
-    }
-#else
-    if (blockDevicePath == nullptr && controllerPath == nullptr)
-    {
-        throw string("No block device or NVM controller specified");
-    }
-    else if (blockDevicePath != nullptr && controllerPath != nullptr)
-    {
-        throw string("Either block device or NVM controller must be specified, not both!");
-    }
-#endif
+    /*
+    #ifdef __DIS_CLUSTER__
+        if (blockDevicePath == nullptr && controllerId == 0)
+        {
+            throw string("No block device or NVM controller specified");
+        }
+        else if (blockDevicePath != nullptr && controllerId != 0)
+        {
+            throw string("Either block device or NVM controller must be specified, not both!");
+        }
+    #else
+        if (blockDevicePath == nullptr && controllerPath == nullptr)
+        {
+            throw string("No block device or NVM controller specified");
+        }
+        else if (blockDevicePath != nullptr && controllerPath != nullptr)
+        {
+            throw string("Either block device or NVM controller must be specified, not both!");
+        }
+    #endif
 
-    if (blockDevicePath != nullptr && doubleBuffered)
-    {
-        throw string("Double buffered reading from block device is not supported");
-    }
-*/
+        if (blockDevicePath != nullptr && doubleBuffered)
+        {
+            throw string("Double buffered reading from block device is not supported");
+        }
+    */
     verifyCudaDevice(cudaDevice);
-    //verifyNumberOfThreads(numThreads);
+    // verifyNumberOfThreads(numThreads);
 
     setBDF(*this);
 }
-
 
 Settings::Settings()
 {
@@ -472,10 +448,10 @@ Settings::Settings()
     input = nullptr;
     output = nullptr;
     ofileoffset = 0;
-    
+
     type = 1;
-    memalloc = 6; 
-    
+    memalloc = 6;
+
     numThreads = 1024;
     blkSize = 64;
     domain = 0;
@@ -486,17 +462,14 @@ Settings::Settings()
     numQueues = 1;
     pageSize = 65536;
     src = 0;
-    tsize = 0; 
-    maxPageCacheSize = (uint64_t)17179869184*2;
-    //maxPageCacheSize = 1073741824; // 1G
+    tsize = 0;
+    maxPageCacheSize = (uint64_t)17179869184 * 2;
+    // maxPageCacheSize = 1073741824; // 1G
     ssdtype = 0;
- 
+
     layer_size = 536870912;
-    //layer_size = 301989888;
+    // layer_size = 301989888;
     iter = 32;
 }
-
-
-
 
 #endif
