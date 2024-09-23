@@ -1,0 +1,1 @@
+pkexec /home/bzx/local/cuda/bin/cuda-gdb "$@"
