@@ -32,25 +32,23 @@
 
 #include "queue.h"
 
-
 #define MAX_QUEUES 1024
-
 
 struct Controller
 {
     simt::atomic<uint64_t, simt::thread_scope_device> access_counter;
     simt::atomic<uint64_t, simt::thread_scope_device> write_io_counter;
-    nvm_ctrl_t*             ctrl;
-    nvm_aq_ref              aq_ref;
-    DmaPtr                  aq_mem;
-    struct nvm_ctrl_info    info;
-    struct nvm_ns_info      ns;
-    uint16_t                n_sqs;
-    uint16_t                n_cqs;
-    uint16_t                n_qps;
-    uint32_t                deviceId;
-    QueuePair**             h_qps;
-    QueuePair*              d_qps;
+    nvm_ctrl_t *ctrl;
+    nvm_aq_ref aq_ref;
+    DmaPtr aq_mem;
+    struct nvm_ctrl_info info;
+    struct nvm_ns_info ns;
+    uint16_t n_sqs;
+    uint16_t n_cqs;
+    uint16_t n_qps;
+    uint32_t deviceId;
+    QueuePair **h_qps;
+    QueuePair *d_qps;
 
     simt::atomic<uint64_t, simt::thread_scope_device> queue_counter;
 
@@ -58,14 +56,13 @@ struct Controller
     uint32_t blk_size;
     uint32_t blk_size_log;
 
-
-    void* d_ctrl_ptr;
+    void *d_ctrl_ptr;
     BufferPtr d_ctrl_buff;
 #ifdef __DIS_CLUSTER__
     Controller(uint64_t controllerId, uint32_t nvmNamespace, uint32_t adapter, uint32_t segmentId);
 #endif
 
-    Controller(const char* path, uint32_t nvmNamespace, uint32_t cudaDevice, uint64_t queueDepth, uint64_t numQueues);
+    Controller(const char *path, uint32_t nvmNamespace, uint32_t cudaDevice, uint64_t queueDepth, uint64_t numQueues);
 
     void reserveQueues();
 
@@ -78,15 +75,13 @@ struct Controller
     ~Controller();
 };
 
-
-
 using error = std::runtime_error;
 using std::string;
 
-
-inline void Controller::print_reset_stats(void) {
+inline void Controller::print_reset_stats(void)
+{
     cuda_err_chk(cudaMemcpy(&access_counter, d_ctrl_ptr, sizeof(simt::atomic<uint64_t, simt::thread_scope_device>), cudaMemcpyDeviceToHost));
-    cuda_err_chk(cudaMemcpy(&write_io_counter, (void*)(((unsigned char*)d_ctrl_ptr)+sizeof(simt::atomic<uint64_t, simt::thread_scope_device>)), sizeof(simt::atomic<uint64_t, simt::thread_scope_device>), cudaMemcpyDeviceToHost));
+    cuda_err_chk(cudaMemcpy(&write_io_counter, (void *)(((unsigned char *)d_ctrl_ptr) + sizeof(simt::atomic<uint64_t, simt::thread_scope_device>)), sizeof(simt::atomic<uint64_t, simt::thread_scope_device>), cudaMemcpyDeviceToHost));
     std::cout << std::dec << "#SSDAccesses:\t" << access_counter << std::endl;
     std::cout << "------------------------------------" << std::endl;
     std::cout << std::dec << "#Write IOs:\t" << write_io_counter << std::endl;
@@ -94,7 +89,7 @@ inline void Controller::print_reset_stats(void) {
     cuda_err_chk(cudaMemset(d_ctrl_ptr, 0, sizeof(simt::atomic<uint64_t, simt::thread_scope_device>)));
 }
 
-static void initializeController(struct Controller& ctrl, uint32_t ns_id)
+static void initializeController(struct Controller &ctrl, uint32_t ns_id)
 {
     // Create admin queue reference
     int status = nvm_aq_create(&ctrl.aq_ref, ctrl.ctrl, ctrl.aq_mem.get());
@@ -125,12 +120,9 @@ static void initializeController(struct Controller& ctrl, uint32_t ns_id)
     }
 }
 
-
-
 #ifdef __DIS_CLUSTER__
 Controller::Controller(uint64_t ctrl_id, uint32_t ns_id, uint32_t)
-    : ctrl(nullptr)
-    , aq_ref(nullptr)
+    : ctrl(nullptr), aq_ref(nullptr)
 {
     // Get controller reference
     int status = nvm_dis_ctrl_init(&ctrl, ctrl_id);
@@ -146,12 +138,8 @@ Controller::Controller(uint64_t ctrl_id, uint32_t ns_id, uint32_t)
 }
 #endif
 
-
-
-inline Controller::Controller(const char* path, uint32_t ns_id, uint32_t cudaDevice, uint64_t queueDepth, uint64_t numQueues)
-    : ctrl(nullptr)
-    , aq_ref(nullptr)
-    , deviceId(cudaDevice)
+inline Controller::Controller(const char *path, uint32_t ns_id, uint32_t cudaDevice, uint64_t queueDepth, uint64_t numQueues)
+    : ctrl(nullptr), aq_ref(nullptr), deviceId(cudaDevice)
 {
     int fd = open(path, O_RDWR);
     if (fd < 0)
@@ -170,7 +158,7 @@ inline Controller::Controller(const char* path, uint32_t ns_id, uint32_t cudaDev
     aq_mem = createDma(ctrl, ctrl->page_size * 3);
 
     initializeController(*this, ns_id);
-    cudaError_t err = cudaHostRegister((void*) ctrl->mm_ptr, NVM_CTRL_MEM_MINSIZE, cudaHostRegisterIoMemory);
+    cudaError_t err = cudaHostRegister((void *)ctrl->mm_ptr, NVM_CTRL_MEM_MINSIZE, cudaHostRegisterIoMemory);
     if (err != cudaSuccess)
     {
         throw error(string("Unexpected error while mapping IO memory (cudaHostRegister): ") + cudaGetErrorString(err));
@@ -179,20 +167,20 @@ inline Controller::Controller(const char* path, uint32_t ns_id, uint32_t cudaDev
     page_size = ctrl->page_size;
     blk_size = this->ns.lba_data_size;
     blk_size_log = std::log2(blk_size);
-    reserveQueues(MAX_QUEUES,MAX_QUEUES);
+    reserveQueues(MAX_QUEUES, MAX_QUEUES);
     n_qps = std::min(n_sqs, n_cqs);
     n_qps = std::min(n_qps, (uint16_t)numQueues);
     printf("SQs: %d\tCQs: %d\tn_qps: %d\n", n_sqs, n_cqs, n_qps);
-    h_qps = (QueuePair**) malloc(sizeof(QueuePair)*n_qps);
-    cuda_err_chk(cudaMalloc((void**)&d_qps, sizeof(QueuePair)*n_qps));
-    for (size_t i = 0; i < n_qps; i++) {
-        //printf("started creating qp\n");
-        h_qps[i] = new QueuePair(ctrl, cudaDevice, ns, info, aq_ref, i+1, queueDepth);
-        //printf("finished creating qp\n");
-        cuda_err_chk(cudaMemcpy(d_qps+i, h_qps[i], sizeof(QueuePair), cudaMemcpyHostToDevice));
+    h_qps = (QueuePair **)malloc(sizeof(QueuePair) * n_qps);
+    cuda_err_chk(cudaMalloc((void **)&d_qps, sizeof(QueuePair) * n_qps));
+    for (size_t i = 0; i < n_qps; i++)
+    {
+        // printf("started creating qp\n");
+        h_qps[i] = new QueuePair(ctrl, cudaDevice, ns, info, aq_ref, i + 1, queueDepth);
+        // printf("finished creating qp\n");
+        cuda_err_chk(cudaMemcpy(d_qps + i, h_qps[i], sizeof(QueuePair), cudaMemcpyHostToDevice));
     }
-    //printf("finished creating all qps\n");
-
+    // printf("finished creating all qps\n");
 
     close(fd);
 
@@ -201,35 +189,27 @@ inline Controller::Controller(const char* path, uint32_t ns_id, uint32_t cudaDev
     cuda_err_chk(cudaMemcpy(d_ctrl_ptr, this, sizeof(Controller), cudaMemcpyHostToDevice));
 }
 
-
-
 inline Controller::~Controller()
 {
     cudaFree(d_qps);
-    for (size_t i = 0; i < n_qps; i++) {
+    for (size_t i = 0; i < n_qps; i++)
+    {
         delete h_qps[i];
     }
     free(h_qps);
     nvm_aq_destroy(aq_ref);
     nvm_ctrl_free(ctrl);
-
 }
-
-
 
 inline void Controller::reserveQueues()
 {
     reserveQueues(n_sqs, n_cqs);
 }
 
-
-
 inline void Controller::reserveQueues(uint16_t numSubmissionQueues)
 {
     reserveQueues(numSubmissionQueues, n_cqs);
 }
-
-
 
 inline void Controller::reserveQueues(uint16_t numSubs, uint16_t numCpls)
 {
@@ -241,9 +221,6 @@ inline void Controller::reserveQueues(uint16_t numSubs, uint16_t numCpls)
 
     n_sqs = numSubs;
     n_cqs = numCpls;
-
 }
-
-
 
 #endif

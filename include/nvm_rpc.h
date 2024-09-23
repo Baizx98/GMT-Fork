@@ -9,10 +9,7 @@
 #include <nvm_types.h>
 #include <stdint.h>
 
-
-//int nvm_tcp_rpc_bind(nvm_aq_ref* ref, const char* hostname, uint16_t port);
-
-
+// int nvm_tcp_rpc_bind(nvm_aq_ref* ref, const char* hostname, uint16_t port);
 
 #ifdef __DIS_CLUSTER__
 
@@ -20,11 +17,9 @@
  * Bind admin queue-pair reference to remote handle.
  * The user should call the nvm_aq_destroy() to remove binding.
  */
-int nvm_dis_rpc_bind(nvm_aq_ref* ref, const nvm_ctrl_t* ctrl, uint32_t adapter);
+int nvm_dis_rpc_bind(nvm_aq_ref *ref, const nvm_ctrl_t *ctrl, uint32_t adapter);
 
 #endif
-
-
 
 /*
  * Unbind admin queue-pair reference.
@@ -32,13 +27,11 @@ int nvm_dis_rpc_bind(nvm_aq_ref* ref, const nvm_ctrl_t* ctrl, uint32_t adapter);
  */
 void nvm_rpc_unbind(nvm_aq_ref ref);
 
-
-
 /*
  * Relay NVM admin command.
  *
  * Use a local AQ pair reference to relay a NVM admin command to ASQ and get
- * a corresponding completion from the ACQ. This function will block until 
+ * a corresponding completion from the ACQ. This function will block until
  * either a timeout occurs or until the command is completed.
  *
  * Return value:
@@ -50,9 +43,6 @@ void nvm_rpc_unbind(nvm_aq_ref ref);
  *
  * Note: The command can be modified.
  */
-int nvm_raw_rpc(nvm_aq_ref ref, nvm_cmd_t* cmd, nvm_cpl_t* cpl);
-
-
-
+int nvm_raw_rpc(nvm_aq_ref ref, nvm_cmd_t *cmd, nvm_cpl_t *cpl);
 
 #endif /* #ifdef __NVM_RPC_H__ */

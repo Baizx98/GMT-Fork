@@ -9,7 +9,6 @@
 #include <string>
 #include <stdexcept>
 
-
 struct Event
 {
     cudaEvent_t event;
@@ -27,17 +26,14 @@ struct Event
         {
             throw std::runtime_error(std::string("Failed to record event on stream: ") + cudaGetErrorString(err));
         }
-
     }
-
 
     inline ~Event()
     {
         cudaEventDestroy(event);
     }
 
-
-    inline double operator-(const Event& other) const
+    inline double operator-(const Event &other) const
     {
         float msecs = 0;
         auto err = cudaEventElapsedTime(&msecs, other.event, event);
@@ -46,9 +42,8 @@ struct Event
             throw std::runtime_error(std::string("Could not calculate elapsed time: ") + cudaGetErrorString(err));
         }
 
-        return ((double) msecs) * 1e3;
+        return ((double)msecs) * 1e3;
     }
 };
-
 
 #endif
