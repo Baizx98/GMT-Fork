@@ -177,8 +177,7 @@ void bpnn_feedforward();
 void bpnn_save();
 BPNN *bpnn_read();
 
-// const char* const sam_ctrls_paths[] = {"/dev/libnvm0"};
-const char *const sam_ctrls_paths[] = {"/dev/libnvm_vmalloc0"};
+const char *const sam_ctrls_paths[] = {"/dev/libnvm0"};
 Settings settings;
 std::vector<Controller *> ctrls;
 page_cache_t *h_pc;
