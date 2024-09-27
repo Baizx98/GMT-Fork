@@ -752,7 +752,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     newnet->input_n = n_in;
     num_blocks = n_in / 16;
     newnet->hidden_n = n_hidden;
-    d if (settings.memalloc == BAFS_DIRECT)
+    if (settings.memalloc == BAFS_DIRECT)
     {
         newnet->n_input_units_pages = (NUM_INPUTS * (n_in + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
         for (uint64_t i = 0; i < NUM_INPUTS; i++)
