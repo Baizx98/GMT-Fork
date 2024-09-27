@@ -186,23 +186,6 @@ HostCache *hc;
 unsigned int num_threads = 0;
 uint64_t num_blocks = 0;
 
-// void flush_for_hc(BPNN *bpnn)
-// {
-//     for (int i = 0; i < NUM_INPUTS; i++)
-//         h_pc->fetch_and_flush(bpnn->h_range_input_units[i]); // input_cuda
-//     h_pc->fetch_and_flush(bpnn->h_range_input_weights);
-//     h_pc->fetch_and_flush(bpnn->h_range_output_hidden_units); // hidden units
-//     h_pc->fetch_and_flush(bpnn->h_range_hidden_partial_sum);
-//     h_pc->fetch_and_flush(bpnn->h_range_input_prev_weights);
-//     h_pc->fetch_and_flush(bpnn->h_range_hidden_prev_weights); // hidden prev weights
-//     h_pc->fetch_and_flush(bpnn->h_range_buffer[0]);
-//     h_pc->fetch_and_flush(bpnn->h_range_buffer[1]);
-//     h_pc->fetch_and_flush(bpnn->h_range_output_units);
-//     h_pc->fetch_and_flush(bpnn->h_range_hidden_weights); // hidden weights
-//     h_pc->fetch_and_flush(bpnn->h_range_output_delta);   // output delta
-//     h_pc->fetch_and_flush(bpnn->h_range_target);         // target
-//     h_pc->fetch_and_flush(bpnn->h_range_hidden_delta);   // hidden delta
-// }
 //////////////////////////////////////
 // CUDA Kernel ///////////////////////
 //////////////////////////////////////
@@ -607,9 +590,6 @@ TYPE **alloc_2d_dbl(int m, int n);
 
 TYPE squash(TYPE x);
 
-// extern char *strcpy();
-// extern void exit();
-
 uint64_t layer_size = 0;
 
 void load(BPNN *net)
@@ -762,7 +742,6 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     uint64_t cnt = 0;
     uint64_t total_pages = 0;
 
-    // newnet = (BPNN *) malloc (sizeof (BPNN));
     newnet = new BPNN;
     if (newnet == NULL)
     {
@@ -773,12 +752,9 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     newnet->input_n = n_in;
     num_blocks = n_in / 16;
     newnet->hidden_n = n_hidden;
-    newnet->output_n = n_out;
-
-    if (settings.memalloc == BAFS_DIRECT)
+    d if (settings.memalloc == BAFS_DIRECT)
     {
         newnet->n_input_units_pages = (NUM_INPUTS * (n_in + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
-        uint64_t offset = 0;
         for (uint64_t i = 0; i < NUM_INPUTS; i++)
         {
             newnet->vec_range_input_units[i].resize(1);
@@ -786,12 +762,8 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
             newnet->vec_range_input_units[i][0] = newnet->h_range_input_units[i];
             newnet->h_input_units_array[i] = new array_t<TYPE>(n_in + 1, total_pages * settings.pageSize /*disk start offset*/, newnet->vec_range_input_units[i], settings.cudaDevice, cnt++);
 
-            offset += ((n_in + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize / 512;
-
             total_pages += newnet->n_input_units_pages / NUM_INPUTS;
         }
-
-        // total_pages += newnet->n_input_units_pages;
     }
     newnet->hidden_units = alloc_1d_dbl(n_hidden + 1);
     newnet->output_units = alloc_1d_dbl(n_out + 1);
@@ -804,7 +776,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     {
         newnet->vec_range_input_weights.resize(1);
         newnet->n_input_weights_pages = ((n_in + 1) * (n_hidden + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
-        newnet->h_range_input_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), 4194304 /*total_pages*/, newnet->n_input_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
+        newnet->h_range_input_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), total_pages /*total_pages*/, newnet->n_input_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
         newnet->vec_range_input_weights[0] = newnet->h_range_input_weights;
         newnet->h_input_weights_array = new array_t<TYPE>((n_in + 1) * (n_hidden + 1), total_pages * settings.pageSize, newnet->vec_range_input_weights, settings.cudaDevice, cnt++);
 
@@ -817,7 +789,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     {
         newnet->vec_range_input_prev_weights.resize(1);
         newnet->n_input_prev_weights_pages = ((n_in + 1) * (n_hidden + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
-        newnet->h_range_input_prev_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), 8388604 /*total_pages*/, newnet->n_input_prev_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
+        newnet->h_range_input_prev_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), total_pages /*total_pages*/, newnet->n_input_prev_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
         newnet->vec_range_input_prev_weights[0] = newnet->h_range_input_prev_weights;
         newnet->h_input_prev_weights_array = new array_t<TYPE>((n_in + 1) * (n_hidden + 1), total_pages * settings.pageSize, newnet->vec_range_input_prev_weights, settings.cudaDevice, cnt++);
 
@@ -1738,11 +1710,13 @@ void backprop_face()
         hc->registerRangesLBA(acc_pages * settings.pageSize / 512);
     acc_pages += net->n_input_units_pages / NUM_INPUTS;
 
-    // hc->registerRangesLBA(acc_pages*settings.pageSize/512); acc_pages += net->n_input_weights_pages;
-    hc->registerRangesLBA(274877906944 / 512);
+    hc->registerRangesLBA(acc_pages * settings.pageSize / 512);
     acc_pages += net->n_input_weights_pages;
-    // hc->registerRangesLBA(acc_pages*settings.pageSize/512); acc_pages += net->n_input_prev_weights_pages;
-    hc->registerRangesLBA(549755813888 / 512);
+    // hc->registerRangesLBA(274877906944 / 512);
+    acc_pages += net->n_input_weights_pages;
+    hc->registerRangesLBA(acc_pages * settings.pageSize / 512);
+    acc_pages += net->n_input_prev_weights_pages;
+    // hc->registerRangesLBA(549755813888 / 512);
     acc_pages += net->n_input_prev_weights_pages;
     hc->registerRangesLBA(acc_pages * settings.pageSize / 512);
     acc_pages += net->n_output_hidden_pages;
@@ -1779,8 +1753,6 @@ void backprop_face()
 }
 
 int setup(int argc, char *argv[])
-// int argc;
-// char *argv[];
 {
     int seed;
 
