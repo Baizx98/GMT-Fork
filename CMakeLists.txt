@@ -53,7 +53,7 @@ set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -lineinfo -D__CUDA__ -D__CUDACC__ -O3;-
 set (CUDA_NVCC_FLAGS_RELEASE "${CMAKE_NVCC_FLAGS_RELEASE} -O2" CACHE INTERNAL "" FORCE)
 
 if (no_cc)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COHERENCE__")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COHERENCE__")                                     
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -D__NO_COHERENCE__")
     set(CCUDA_NVCC_FLAGS "${CMAKE_C_FLAGS} -D__NO_COHERENCE__")
 endif ()
@@ -363,6 +363,7 @@ endif ()
 
 # Add individual benchmarks
 if (CUDA_FOUND AND NOT no_cuda)
+  #add_subdirectory ("${benchmarks_root}/vectoradd")
   #add_subdirectory ("${benchmarks_root}/multivectoradd")
   #add_subdirectory ("${benchmarks_root}/pathfinder")
   add_subdirectory ("${benchmarks_root}/backprop")
