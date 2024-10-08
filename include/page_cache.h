@@ -194,7 +194,7 @@ struct returned_cache_page_t
 #define DISABLE_BUSY_MASK_ 0xbfffffff
 
 // CHIA-HAO
-#define USE_HOST_CACHE 0
+#define USE_HOST_CACHE 1
 #define ENABLE_TMM 1
 #define PRINT_TMM 0
 #define ALWAYS_EVICT 0
@@ -2773,7 +2773,10 @@ struct array_d_t
             ret = ((T *)(r_->get_cache_page_addr(base_master) + subindex))[0];
             __syncwarp(eq_mask);
             if (master == lane)
+            {
+                // printf("READ  page:%lu subindex:%lu gaddr:%lu base_master:%lu count:%lu arrayIdx:%lu\n", (unsigned long)page, (unsigned long)subindex, (unsigned long)gaddr, (unsigned long)base_master, (unsigned long)count, (unsigned long)array_idx);
                 r_->release_page(page, count);
+            }
             __syncwarp(mask);
         }
         return ret;
@@ -2853,7 +2856,10 @@ struct array_d_t
             ((T *)(r_->get_cache_page_addr(base_master) + subindex))[0] = val;
             __syncwarp(eq_mask);
             if (master == lane)
+            {
+                // printf("WRITE  page:%lu subindex:%lu gaddr:%lu base_master:%lu count:%lu arrayIdx:%lu\n", (unsigned long)page, (unsigned long)subindex, (unsigned long)gaddr, (unsigned long)base_master, (unsigned long)count, (unsigned long)array_idx);
                 r_->release_page(page, count);
+            }
             __syncwarp(mask);
         }
     }
