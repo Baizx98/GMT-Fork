@@ -467,8 +467,9 @@ Settings::Settings()
     // maxPageCacheSize = 1073741824; // 1G
     ssdtype = 0;
 
-    layer_size = 536870912;
-    // layer_size = 301989888;
+    // layer_size = 16;
+    // layer_size = 536870912;
+    layer_size = 301989888;
     iter = 32;
 }
 

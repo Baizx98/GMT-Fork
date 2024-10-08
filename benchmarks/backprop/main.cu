@@ -752,6 +752,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
     newnet->input_n = n_in;
     num_blocks = n_in / 16;
     newnet->hidden_n = n_hidden;
+    newnet->output_n = n_out;
     if (settings.memalloc == BAFS_DIRECT)
     {
         newnet->n_input_units_pages = (NUM_INPUTS * (n_in + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
@@ -777,6 +778,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
         newnet->vec_range_input_weights.resize(1);
         newnet->n_input_weights_pages = ((n_in + 1) * (n_hidden + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
         newnet->h_range_input_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), total_pages /*total_pages*/, newnet->n_input_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
+        // newnet->h_range_input_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), 4194304 /*total_pages*/, newnet->n_input_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
         newnet->vec_range_input_weights[0] = newnet->h_range_input_weights;
         newnet->h_input_weights_array = new array_t<TYPE>((n_in + 1) * (n_hidden + 1), total_pages * settings.pageSize, newnet->vec_range_input_weights, settings.cudaDevice, cnt++);
 
@@ -790,6 +792,7 @@ BPNN *bpnn_internal_create(uint64_t n_in, uint64_t n_hidden, uint64_t n_out)
         newnet->vec_range_input_prev_weights.resize(1);
         newnet->n_input_prev_weights_pages = ((n_in + 1) * (n_hidden + 1) * sizeof(TYPE) + settings.pageSize - 1) / settings.pageSize;
         newnet->h_range_input_prev_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), total_pages /*total_pages*/, newnet->n_input_prev_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
+        // newnet->h_range_input_prev_weights = new range_t<TYPE>(0, (n_in + 1) * (n_hidden + 1), 8388604 /*total_pages*/, newnet->n_input_prev_weights_pages, 0, settings.pageSize, h_pc, settings.cudaDevice);
         newnet->vec_range_input_prev_weights[0] = newnet->h_range_input_prev_weights;
         newnet->h_input_prev_weights_array = new array_t<TYPE>((n_in + 1) * (n_hidden + 1), total_pages * settings.pageSize, newnet->vec_range_input_prev_weights, settings.cudaDevice, cnt++);
 
