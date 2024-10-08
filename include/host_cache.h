@@ -2401,11 +2401,11 @@ void HostCache::loggingOnHost(uint64_t arrayIdx, uint64_t pageIdx, uint32_t acti
     // int64_t pos;
     // uint64_t dist;
     std::stringstream ss;
-    if (actionType == PAGE_ACTION_EVICT)
-        ss << "Ev " << std::dec << key << std::endl;
-    else
-        ss << std::dec << key << std::endl;
-    std::cout << ss.str();
+    // if (actionType == PAGE_ACTION_EVICT)
+    //     ss << "Ev " << std::dec << key << std::endl;
+    // else
+    //     ss << std::dec << key << std::endl;
+    // std::cout << ss.str();
     // std::cout << std::dec << key << std::endl;
     /*
     if (actionType == PAGE_ACTION_ACCESS || actionType == PAGE_ACTION_FETCH) {
